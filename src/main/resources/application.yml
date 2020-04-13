@@ -1,0 +1,16 @@
+# 端口
+server:
+  port: 8090
+  
+spring:
+  profiles:
+    active: dev # 默认为开发环境
+    
+mybatis-plus:
+  mapper-locations:
+    - classpath:mapper/**/*.xml
+    - classpath*:com/**/mapper/*.xml
+
+logging:
+  level:
+    root: info # 日志配置DEBUG,INFO,WARN,ERROR
