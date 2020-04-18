@@ -42,10 +42,11 @@ public class UserRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
         // TODO Auto-generated method stub
+        String username = token.getPrincipal().toString();
         // wrapper条件构造器
         QueryWrapper<SysUser> queryWrapper = new QueryWrapper<>();
         // 条件匹配loginname
-        queryWrapper.eq("loginname", token.getPrincipal().toString());
+        queryWrapper.eq("loginname", username);
         SysUser user = userService.getOne(queryWrapper);
         // 非空
         if (null != user) {
@@ -55,10 +56,12 @@ public class UserRealm extends AuthorizingRealm {
             // 加盐 等同于uuid
             ByteSource credentialsSalt = ByteSource.Util.bytes(user.getSalt());
             // SimpleAuthenticationInfo是AuthenticationInfo的实现
+            // 这个对象最重要的就是第二个参数，是由shiro去判断密码是否相等
             SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(activeUser, user.getPwd(), credentialsSalt,
                     getName());
             return info;
         }
+        // 用户不存在 这里null shiro会抛出异常
         return null;
     }
 
