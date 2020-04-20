@@ -36,7 +36,8 @@ public class ShiroConfig {
          * role：拥有某个角色权限才能访问
          */
         // 退出过滤器 shiro后面一个参数是权限
-        filterMap.put("/logout", "logout");
+        // 因为使用了自定义controller来实现退出，所以注掉
+//        filterMap.put("/logout", "logout");
         // 登录
         filterMap.put("/login", "anon");
         filterMap.put("/*", "authc");
