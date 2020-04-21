@@ -3,9 +3,16 @@ package com.zaichiyikou.starter.system.config;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.shiro.authc.credential.CredentialsMatcher;
+import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.mgt.RememberMeManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.apache.shiro.web.mgt.CookieRememberMeManager;
+import org.apache.shiro.web.servlet.Cookie;
+import org.apache.shiro.web.servlet.SimpleCookie;
+import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +25,20 @@ import com.zaichiyikou.starter.system.realm.UserRealm;
 @Configuration
 public class ShiroConfig {
 
+    // 加密规则
+    private static final String hashAlgorithmName = "md5";
+    // 加密迭代次数
+    private static final int hashIterations = 100;
+    // cookie过期时间
+    private static final int maxAge = 60 * 60 * 60 * 7;
+    // 全局session过期时间
+    private static final long globalSessionTimeout = 60 * 60 * 60 * 7;
+
     /*
      * shirofilterFactoryBean
      */
-    public ShiroFilterFactoryBean ShiroFilterFactoryBean(
-            @Qualifier(value = "securityManager") DefaultSecurityManager securityManager) {
+    public ShiroFilterFactoryBean
+        ShiroFilterFactoryBean(@Qualifier(value = "securityManager") DefaultSecurityManager securityManager) {
         ShiroFilterFactoryBean filterFactoryBean = new ShiroFilterFactoryBean();
         // 设置安全管理器
         filterFactoryBean.setSecurityManager(securityManager);
@@ -37,7 +53,7 @@ public class ShiroConfig {
          */
         // 退出过滤器 shiro后面一个参数是权限
         // 因为使用了自定义controller来实现退出，所以注掉
-//        filterMap.put("/logout", "logout");
+        // filterMap.put("/logout", "logout");
         // 登录
         filterMap.put("/login", "anon");
         filterMap.put("/*", "authc");
@@ -61,31 +77,91 @@ public class ShiroConfig {
      * defaultSecurityManager
      */
     @Bean(name = "securityManager")
-    public DefaultSecurityManager DefaultSecurityManager(@Qualifier(value = "userRealm") UserRealm realm) {
+    public DefaultSecurityManager DefaultSecurityManager(@Qualifier(value = "userRealm") UserRealm realm,
+        @Qualifier("CookieRememberMeManager") RememberMeManager rememberMeManager,
+        @Qualifier("SessionManager") SessionManager sessionManager,
+        @Qualifier("DefaultWebSessionManager") DefaultWebSessionManager globalSessionManager) {
         DefaultSecurityManager manager = new DefaultSecurityManager();
         // 加载userRealm
         manager.setRealm(realm);
+        // 加载全局sessionManager
+        manager.setSessionManager(globalSessionManager);
         // 加载修改的SessionManager
-        manager.setSessionManager(SessionManager());
+        manager.setSessionManager(sessionManager);
+        // 加入记住我功能
+        manager.setRememberMeManager(rememberMeManager);
         return manager;
     }
 
-    
-    /*
-     * sessionManager
+    /**
+     * 全局的sessionManager
+     * 
+     * @return
      */
+    @Bean(name = "DefaultWebSessionManager")
+    public DefaultWebSessionManager defaultWebSessionManager() {
+        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+        sessionManager.setGlobalSessionTimeout(globalSessionTimeout);
+        return sessionManager;
+    }
+
+    /*
+     * 自定义sessionManager
+     */
+    @Bean(name = "SessionManager")
     public SessionManager SessionManager() {
         // 返回
         SessionManager sessionManager = new ShiroSessionManager();
         return sessionManager;
     }
-    
+
+    /**
+     * CookieRememberMeManager
+     * 
+     * @param cookie
+     * @return
+     */
+    @Bean(name = "CookieRememberMeManager")
+    public CookieRememberMeManager rememberMeManager(@Qualifier("SimpleCookie") SimpleCookie cookie) {
+        CookieRememberMeManager manager = new CookieRememberMeManager();
+        manager.setCookie(cookie);
+        return manager;
+    }
+
+    /**
+     * SimpleCookie配合rememberMeManager
+     * 
+     * @return
+     */
+    @Bean(name = "SimpleCookie")
+    public SimpleCookie simpleCookie() {
+        SimpleCookie cookie = new SimpleCookie();
+        cookie.setMaxAge(maxAge);
+        cookie.setHttpOnly(true);
+        return cookie;
+    }
+
+    /**
+     * 密文比对器
+     * 
+     * @return
+     */
+    @Bean(name = "HashedCredentialsMatcher")
+    public HashedCredentialsMatcher hashedCredentialsMatcher() {
+        HashedCredentialsMatcher matcher = new HashedCredentialsMatcher();
+        matcher.setHashAlgorithmName(hashAlgorithmName);
+        matcher.setHashIterations(hashIterations);
+        return matcher;
+    }
+
     /*
-     * realm
+     * userrealm
      */
     @Bean(name = "userRealm")
-    public UserRealm userRealm() {
-        return new UserRealm();
+    public UserRealm userRealm(@Qualifier("HashedCredentialsMatcher") HashedCredentialsMatcher credentialsMatcher) {
+        UserRealm realm = new UserRealm();
+        realm.setCredentialsMatcher(credentialsMatcher);
+        return realm;
     }
 
 }

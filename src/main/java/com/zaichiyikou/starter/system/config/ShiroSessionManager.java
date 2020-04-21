@@ -5,6 +5,8 @@ import java.io.Serializable;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.shiro.session.InvalidSessionException;
+import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.web.servlet.ShiroHttpServletRequest;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
@@ -46,4 +48,12 @@ public class ShiroSessionManager extends DefaultWebSessionManager {
             return super.getSessionId(request, response);
         }
     }
+
+
+    @Override
+    public void setTimeout(SessionKey key, long maxIdleTimeInMillis) throws InvalidSessionException {
+        // TODO Auto-generated method stub
+        super.setTimeout(key, maxIdleTimeInMillis);
+    }
+    
 }
