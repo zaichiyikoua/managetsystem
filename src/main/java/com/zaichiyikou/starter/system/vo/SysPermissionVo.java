@@ -1,21 +1,21 @@
 package com.zaichiyikou.starter.system.vo;
 
-import com.zaichiyikou.starter.system.pojo.SysUser;
+import com.zaichiyikou.starter.system.pojo.SysPermission;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 系统用户类VO
+ * 系统权限VO
  * 
  * @author zaichiyikoua
  * @since 2020-4-21
  */
 
-@SuppressWarnings("serial")
 @Data
+@SuppressWarnings("serial")
 @EqualsAndHashCode(callSuper = false)
-public class SysUserVo extends SysUser {
+public class SysPermissionVo extends SysPermission {
     private Integer page = 1;
     private Integer limit = 10;
 }
