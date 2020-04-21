@@ -1,10 +1,13 @@
 package com.zaichiyikou.starter.system.realm;
 
+import java.util.List;
+
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
@@ -33,7 +36,15 @@ public class UserRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         // TODO Auto-generated method stub
-        return null;
+        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+        ActiveUser user = (ActiveUser)principals.getPrimaryPrincipal();
+        List<String> roles = null;
+        // 查询用户的角色列表 加入
+        info.addRoles(roles);
+        List<String> permissions = null;
+        // 查询用户的权限列表 加入
+        info.addStringPermissions(permissions);
+        return info;
     }
 
     /*
@@ -57,8 +68,8 @@ public class UserRealm extends AuthorizingRealm {
             ByteSource credentialsSalt = ByteSource.Util.bytes(user.getSalt());
             // SimpleAuthenticationInfo是AuthenticationInfo的实现
             // 这个对象最重要的就是第二个参数，是由shiro去判断密码是否相等
-            SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(activeUser, user.getPwd(), credentialsSalt,
-                    getName());
+            SimpleAuthenticationInfo info =
+                new SimpleAuthenticationInfo(activeUser, user.getPwd(), credentialsSalt, getName());
             return info;
         }
         // 用户不存在 这里null shiro会抛出异常
