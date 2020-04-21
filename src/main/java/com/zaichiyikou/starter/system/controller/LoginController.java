@@ -3,6 +3,8 @@ package com.zaichiyikou.starter.system.controller;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.IncorrectCredentialsException;
+import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
@@ -32,10 +34,12 @@ public class LoginController {
     /**
      * 登录接口
      * 
-     * @param username 用户名
-     *            
-     * @param password 密码
-     *            
+     * @param username
+     *            用户名
+     * 
+     * @param password
+     *            密码
+     * 
      * @return 返回信息
      */
     @RequestMapping(value = "/login", method = RequestMethod.GET)
@@ -54,15 +58,21 @@ public class LoginController {
             // 放进session中
             WebUtils.getSession().setAttribute("user", user.getUser());
             return CommonResult.success("登录成功");
+        } catch (IncorrectCredentialsException e) {
+            // TODO: handle exception
+            log.error("密码错误");
+            return CommonResult.validateFailed("密码错误");
+        } catch (LockedAccountException e) {
+            // TODO: handle exception
+            log.error("登录失败，该用户已被冻结");
+            return CommonResult.validateFailed("登录失败，该用户已被冻结");
         } catch (AuthenticationException e) {
             // TODO: handle exception
-            e.printStackTrace();
             log.error("登录认证失败");
             return CommonResult.failed("登录认证失败");
         } catch (Exception e) {
             // TODO: handle exception
             e.printStackTrace();
-            log.error("操作失败");
             return CommonResult.failed();
         }
     }
